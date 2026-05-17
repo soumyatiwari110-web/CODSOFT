@@ -149,6 +149,10 @@ def predict():
                                survival_prob=0,
                                death_prob=100,
                                profile={})
+    
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')    
 
 
 @app.route('/api/predict', methods=['POST'])

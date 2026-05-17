@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDA Dashboard | Titanic AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .dash-card {
+            background: #112233;
+            border: 1px solid rgba(201,168,76,0.25);
+            border-top: 3px solid #C9A84C;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+        .dash-card:hover {
+            box-shadow: 0 0 25px rgba(201,168,76,0.15);
+            transform: translateY(-3px);
+        }
+        .dash-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            color: #C9A84C;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(201,168,76,0.2);
+        }
+        .bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .bar-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.72rem;
+            color: #A0A8B0;
+            min-width: 90px;
+            text-align: right;
+        }
+        .bar-outer {
+            flex: 1;
+            height: 28px;
+            background: rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .bar-inner {
+            height: 100%;
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.25,0.46,0.45,0.94);
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #0D1B2A;
+        }
+        .bar-gold    { background: linear-gradient(90deg, #C9A84C, #E4C577); }
+        .bar-green   { background: linear-gradient(90deg, #2DC653, #60D98B); }
+        .bar-red     { background: linear-gradient(90deg, #E63946, #F06470); }
+        .bar-blue    { background: linear-gradient(90deg, #4A90E2, #7AB4F0); }
+        .bar-purple  { background: linear-gradient(90deg, #9B59B6, #C39BD3); }
+        .bar-orange  { background: linear-gradient(90deg, #E67E22, #F0A500); }
+
+        .kpi-box {
+            background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.3);
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+        }
+        .kpi-num {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #C9A84C;
+            display: block;
+        }
+        .kpi-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #A0A8B0;
+        }
+        .donut-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .donut-item { text-align: center; }
+        .donut-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #0D1B2A;
+            position: relative;
+        }
+        .donut-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            color: #A0A8B0;
+        }
+        .insight-box {
+            background: rgba(201,168,76,0.05);
+            border-left: 3px solid #C9A84C;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #A0A8B0;
+        }
+        .insight-box strong { color: #C9A84C; }
+
+        .age-bar-group { margin-bottom: 8px; }
+        .survived-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            color: #2DC653;
+            letter-spacing: 0.05em;
+        }
+        .died-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            color: #E63946;
+            letter-spacing: 0.05em;
+        }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark st-navbar fixed-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand st-brand" href="/"><i class="fas fa-ship me-2"></i>RMS Titanic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/predict">Predict</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div style="min-height:100vh; background:#0D1B2A; padding-top: 90px; padding-bottom: 60px;">
+<div class="container-fluid px-4">
+
+    <!-- HEADER -->
+    <div class="text-center mb-5">
+        <p class="st-tagline">EXPLORATORY DATA ANALYSIS</p>
+        <h2 class="st-page-title">Titanic Dataset Dashboard</h2>
+        <p class="st-page-sub">891 passengers · 12 features · Real historical data from 1912</p>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="kpi-box">
+                <span class="kpi-num">891</span>
+                <span class="kpi-label">Total Passengers</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-box">
+                <span class="kpi-num" style="color:#2DC653">342</span>
+                <span class="kpi-label">Survived</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-box">
+                <span class="kpi-num" style="color:#E63946">549</span>
+                <span class="kpi-label">Did Not Survive</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-box">
+                <span class="kpi-num">38.4%</span>
+                <span class="kpi-label">Survival Rate</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- CHART 1: Overall Survival -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-chart-bar me-2"></i>Overall Survival
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Survived</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-green" data-width="38.4">38.4%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Not Survived</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="61.6">61.6%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    Only <strong>38.4%</strong> of passengers survived. More than 
+                    <strong>61%</strong> perished in the disaster.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 2: Gender Survival -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-venus-mars me-2"></i>Survival by Gender
+                </div>
+                <div class="mb-3">
+                    <div class="survived-label mb-1">
+                        <span class="legend-dot" style="background:#2DC653"></span>Female Survival
+                    </div>
+                    <div class="bar-wrap">
+                        <span class="bar-label">Survived</span>
+                        <div class="bar-outer">
+                            <div class="bar-inner bar-green" data-width="74.2">74.2%</div>
+                        </div>
+                    </div>
+                    <div class="bar-wrap">
+                        <span class="bar-label">Not Survived</span>
+                        <div class="bar-outer">
+                            <div class="bar-inner bar-red" data-width="25.8">25.8%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="died-label mb-1">
+                        <span class="legend-dot" style="background:#E63946"></span>Male Survival
+                    </div>
+                    <div class="bar-wrap">
+                        <span class="bar-label">Survived</span>
+                        <div class="bar-outer">
+                            <div class="bar-inner bar-blue" data-width="18.9">18.9%</div>
+                        </div>
+                    </div>
+                    <div class="bar-wrap">
+                        <span class="bar-label">Not Survived</span>
+                        <div class="bar-outer">
+                            <div class="bar-inner bar-red" data-width="81.1">81.1%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <strong>"Women and children first"</strong> — Female survival rate 
+                    was <strong>4x higher</strong> than male.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 3: Class Survival -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-crown me-2"></i>Survival by Class
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">1st Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="62.9">62.9%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">2nd Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-blue" data-width="47.3">47.3%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">3rd Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="24.2">24.2%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <strong>1st class</strong> passengers had 
+                    <strong>2.6x better</strong> survival odds than 3rd class passengers.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 4: Age Groups -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-child me-2"></i>Survival by Age Group
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Child (0-12)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-green" data-width="59.0">59.0%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Teen (13-18)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-blue" data-width="42.0">42.0%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Adult (19-35)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="38.0">38.0%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Middle (36-60)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-orange" data-width="37.0">37.0%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Senior (60+)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="22.7">22.7%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <strong>Children</strong> had highest survival rate at 
+                    <strong>59%</strong>. Seniors had lowest at <strong>22.7%</strong>.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 5: Embarkation -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-anchor me-2"></i>Survival by Port
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Cherbourg(C)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="55.4">55.4%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Queenstown(Q)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-blue" data-width="39.0">39.0%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Southampton(S)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="33.7">33.7%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    Passengers from <strong>Cherbourg</strong> had best survival odds 
+                    — many were wealthy 1st class travelers.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 6: Family Size -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-users me-2"></i>Survival by Family Size
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Alone (1)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="30.4">30.4%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Small (2-3)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-green" data-width="57.8">57.8%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Medium (4-5)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="72.4">72.4%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Large (6+)</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-purple" data-width="13.6">13.6%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <strong>Medium families</strong> had best survival odds. 
+                    Solo travelers and very large families fared worst.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 7: Passenger Distribution -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-users me-2"></i>Passenger Class Distribution
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">1st Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="24.2">216 (24.2%)</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">2nd Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-blue" data-width="20.7">184 (20.7%)</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">3rd Class</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="55.1">491 (55.1%)</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    More than <strong>55%</strong> of passengers were in 
+                    <strong>3rd class</strong> — the most economically vulnerable group.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 8: Gender Distribution -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-venus-mars me-2"></i>Gender Distribution
+                </div>
+                <div class="donut-wrap mt-3">
+                    <div class="donut-item">
+                        <div class="donut-circle" style="background: linear-gradient(135deg, #4A90E2, #7AB4F0);">
+                            64.8%
+                        </div>
+                        <div class="donut-label">Male<br><span style="color:#4A90E2; font-family:'Cinzel',serif; font-size:0.8rem;">577</span></div>
+                    </div>
+                    <div class="donut-item">
+                        <div class="donut-circle" style="background: linear-gradient(135deg, #C9A84C, #E4C577);">
+                            35.2%
+                        </div>
+                        <div class="donut-label">Female<br><span style="color:#C9A84C; font-family:'Cinzel',serif; font-size:0.8rem;">314</span></div>
+                    </div>
+                </div>
+                <div class="insight-box mt-3">
+                    <strong>64.8%</strong> of passengers were male. 
+                    Despite being minority, females had <strong>far better</strong> survival odds.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 9: Model Performance -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dash-card">
+                <div class="dash-title">
+                    <i class="fas fa-trophy me-2"></i>ML Model Performance
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Log. Regression</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-gold" data-width="81.56">81.56%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Random Forest</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-blue" data-width="79.89">79.89%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">Decision Tree</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-purple" data-width="75.98">75.98%</div>
+                    </div>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">KNN</span>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-red" data-width="69.27">69.27%</div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <strong>Logistic Regression</strong> performed best with 
+                    <strong>81.56%</strong> accuracy on test data.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- KEY FINDINGS -->
+    <div class="dash-card mt-2">
+        <div class="dash-title">
+            <i class="fas fa-lightbulb me-2"></i>Key Findings Summary
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div style="background:rgba(45,198,83,0.08); border:1px solid rgba(45,198,83,0.3); padding:1rem;">
+                    <h6 style="font-family:'Cinzel',serif; color:#2DC653; font-size:0.8rem;">TOP SURVIVAL FACTORS</h6>
+                    <p style="color:#A0A8B0; font-size:0.85rem; margin:0;">
+                        ✅ Female gender (+55% boost)<br>
+                        ✅ 1st class ticket (+25% boost)<br>
+                        ✅ Child age 0-12 (+21% boost)<br>
+                        ✅ Small family size (+27% boost)
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="background:rgba(230,57,70,0.08); border:1px solid rgba(230,57,70,0.3); padding:1rem;">
+                    <h6 style="font-family:'Cinzel',serif; color:#E63946; font-size:0.8rem;">DEATH RISK FACTORS</h6>
+                    <p style="color:#A0A8B0; font-size:0.85rem; margin:0;">
+                        ❌ Male gender (-55% penalty)<br>
+                        ❌ 3rd class ticket (-39% penalty)<br>
+                        ❌ Travelling alone (-8% penalty)<br>
+                        ❌ Large family 6+ (-58% penalty)
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.3); padding:1rem;">
+                    <h6 style="font-family:'Cinzel',serif; color:#C9A84C; font-size:0.8rem;">DATASET STATS</h6>
+                    <p style="color:#A0A8B0; font-size:0.85rem; margin:0;">
+                        📊 891 total passengers<br>
+                        📊 11 engineered features<br>
+                        📊 20% missing Age values<br>
+                        📊 77% missing Cabin values
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<footer class="st-footer">
+    <div class="container text-center">
+        <p class="st-footer-name">Built by <span class="st-gold">Soumya Tiwari</span></p>
+        <p class="st-footer-copy">© 2024 Titanic Survival Prediction System</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bars = document.querySelectorAll('.bar-inner');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const width = entry.target.getAttribute('data-width');
+                setTimeout(() => {
+                    entry.target.style.width = width + '%';
+                }, 200);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.3 });
+    bars.forEach(bar => {
+        bar.style.width = '0%';
+        observer.observe(bar);
+    });
+});
+</script>
+</body>
+</html>
