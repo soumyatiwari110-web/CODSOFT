@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Result | Titanic AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark st-navbar fixed-top">
+    <div class="container">
+        <a class="navbar-brand st-brand" href="/"><i class="fas fa-ship me-2"></i>RMS Titanic</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/predict">Predict Again</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="st-result-page">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="mt-5 pt-4">
+
+                    {% if survived %}
+                    <div class="st-result-card st-survived">
+                        <div class="st-result-icon survived-icon">
+                            <i class="fas fa-life-ring"></i>
+                        </div>
+                        <div class="st-result-verdict">SURVIVED</div>
+                        <h2 class="st-result-title">You Would Have Made It</h2>
+                        <p class="st-result-desc">
+                            Based on your passenger profile, the AI predicts you would have
+                            survived the sinking of the RMS Titanic on April 15, 1912.
+                        </p>
+                        <div class="st-probability-bars">
+                            <div class="st-prob-item">
+                                <span class="st-prob-label">Survival Probability</span>
+                                <div class="st-prob-bar-wrap">
+                                    <div class="st-prob-bar survived-bar"
+                                         data-width="{{ survival_prob }}"></div>
+                                </div>
+                                <span class="st-prob-pct st-gold">{{ survival_prob }}%</span>
+                            </div>
+                            <div class="st-prob-item">
+                                <span class="st-prob-label">Death Probability</span>
+                                <div class="st-prob-bar-wrap">
+                                    <div class="st-prob-bar death-bar"
+                                         data-width="{{ death_prob }}"></div>
+                                </div>
+                                <span class="st-prob-pct st-red">{{ death_prob }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="st-result-card st-perished">
+                        <div class="st-result-icon perished-icon">
+                            <i class="fas fa-anchor"></i>
+                        </div>
+                        <div class="st-result-verdict perished-verdict">DID NOT SURVIVE</div>
+                        <h2 class="st-result-title">The Ocean Claims You</h2>
+                        <p class="st-result-desc">
+                            Based on your passenger profile, the AI predicts you would not
+                            have survived the sinking of the RMS Titanic on April 15, 1912.
+                        </p>
+                        <div class="st-probability-bars">
+                            <div class="st-prob-item">
+                                <span class="st-prob-label">Survival Probability</span>
+                                <div class="st-prob-bar-wrap">
+                                    <div class="st-prob-bar survived-bar"
+                                         data-width="{{ survival_prob }}"></div>
+                                </div>
+                                <span class="st-prob-pct st-gold">{{ survival_prob }}%</span>
+                            </div>
+                            <div class="st-prob-item">
+                                <span class="st-prob-label">Death Probability</span>
+                                <div class="st-prob-bar-wrap">
+                                    <div class="st-prob-bar death-bar"
+                                         data-width="{{ death_prob }}"></div>
+                                </div>
+                                <span class="st-prob-pct st-red">{{ death_prob }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="st-profile-card mt-4">
+                        <h4 class="st-profile-title">
+                            <i class="fas fa-id-card me-2 st-gold"></i>Your Passenger Profile
+                        </h4>
+                        <div class="row g-3 mt-2">
+                            {% for key, val in profile.items() %}
+                            <div class="col-6 col-md-4">
+                                <div class="st-profile-item">
+                                    <span class="st-profile-key">
+                                        {{ key.replace('_', ' ').title() }}
+                                    </span>
+                                    <span class="st-profile-val">{{ val }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-6">
+                            <a href="/predict" class="st-btn-primary w-100 text-center d-block">
+                                <i class="fas fa-redo me-2"></i>Try Again
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="/" class="st-btn-outline w-100 text-center d-block">
+                                <i class="fas fa-home me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="st-footer">
+    <div class="container text-center">
+        <p class="st-footer-name">Built by <span class="st-gold">Soumya Tiwari</span></p>
+        <p class="st-footer-copy">© 2024 Titanic Survival Prediction System</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
